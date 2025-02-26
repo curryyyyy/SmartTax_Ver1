@@ -79,7 +79,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                     Spacer(modifier = Modifier.weight(1f))
 
                     //upload receipt
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                         Icon(
                             Icons.Filled.AddCircle,
                             contentDescription = "Localized description",

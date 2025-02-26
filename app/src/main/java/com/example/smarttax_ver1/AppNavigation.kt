@@ -12,6 +12,7 @@ import com.example.smarttax_ver1.screen.HomeScreen
 import com.example.smarttax_ver1.screen.LoginScreen
 import com.example.smarttax_ver1.screen.ProfileScreen
 import com.example.smarttax_ver1.screen.RegisterScreen
+import com.example.smarttax_ver1.screen.UploadReceiptScreen
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -49,6 +50,10 @@ fun AppNavigation(modifier: Modifier = Modifier){
 
         composable("category"){
             CategoryScreen(modifier)
+        }
+
+        composable("uploadReceipt") {
+            UploadReceiptScreen(modifier, navController)
         }
     }
 }
