@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "174963480472",
+    "project_id": "smarttaxver1",
+    "storage_bucket": "smarttaxver1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174963480472:android:b66a24180ffc5eea943ded",
+        "android_client_info": {
+          "package_name": "com.example.smarttax_ver1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
