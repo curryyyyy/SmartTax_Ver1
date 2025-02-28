@@ -246,16 +246,24 @@ fun UploadReceiptContent(
             Button(
                 onClick = {
                     isLoading = true
-                    // Simulate processing delay
-                    android.os.Handler().postDelayed({
+                    // Navigate to the receipt summary screen with the image URI
+                    if (selectedImageUri != null) {
+                        val encodedUri = Uri.encode(selectedImageUri.toString())
+                        navController.navigate("receiptSummary/${encodedUri}")
+                    } else {
+                        AppUtil.showToast(context, "No image selected")
                         isLoading = false
-                        navController.navigate("home") // Change to receipt summary when available
-                    }, 2000)
+                    }
+//                    // Simulate processing delay
+//                    android.os.Handler().postDelayed({
+//                        isLoading = false
+//                        navController.navigate("home") // Change to receipt summary when available
+//                    }, 2000)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !isLoading
+                enabled = !isLoading && selectedImageUri != null
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
