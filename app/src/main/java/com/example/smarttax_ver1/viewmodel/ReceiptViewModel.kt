@@ -170,6 +170,41 @@ class ReceiptViewModel : ViewModel() {
         }
     }
 
+    // Add this method to save corrections
+    fun submitUserCorrections(originalText: String, correctedText: String, imageUri: Uri, context: Context) {
+        val userId = auth.currentUser?.uid ?: return
+
+        viewModelScope.launch {
+            try {
+                // 1. Upload the original image to storage if not already there
+                val imageFileName = "training/${userId}/${UUID.randomUUID()}.jpg"
+                val storageRef = storage.reference.child(imageFileName)
+
+                // Upload image
+                val inputStream = context.contentResolver.openInputStream(imageUri)
+                storageRef.putStream(inputStream!!).await()
+                val imageUrl = storageRef.downloadUrl.await().toString()
+
+                // 2. Save original OCR result and user corrections to Firestore
+                val correctionData = hashMapOf(
+                    "userId" to userId,
+                    "originalText" to originalText,
+                    "correctedText" to correctedText,
+                    "imageUrl" to imageUrl,
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+                firestore.collection("ocrCorrections")
+                    .add(correctionData)
+                    .await()
+
+                Log.d("ReceiptViewModel", "Saved OCR correction data for training")
+            } catch (e: Exception) {
+                Log.e("ReceiptViewModel", "Error saving OCR correction data", e)
+            }
+        }
+    }
+
     // Update receipt data for manual corrections
     fun updateReceiptData(updatedData: ReceiptData) {
         receiptData = updatedData

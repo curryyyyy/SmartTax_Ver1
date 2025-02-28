@@ -25,10 +25,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
@@ -39,15 +41,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +73,7 @@ import com.example.smarttax_ver1.AppUtil
 import com.example.smarttax_ver1.OCR.LineItem
 import com.example.smarttax_ver1.OCR.ReceiptData
 import com.example.smarttax_ver1.viewmodel.ReceiptViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,8 +84,11 @@ fun ReceiptSummaryScreen(
     imageUri: Uri
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -136,7 +147,8 @@ fun ReceiptSummaryScreen(
             modifier = modifier.padding(innerPadding),
             navController = navController,
             receiptViewModel = receiptViewModel,
-            imageUri = imageUri
+            imageUri = imageUri,
+            snackbarHostState = snackbarHostState
         )
     }
 }
@@ -146,16 +158,31 @@ fun ReceiptSummaryContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     receiptViewModel: ReceiptViewModel,
-    imageUri: Uri
+    imageUri: Uri,
+    snackbarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val receiptData = receiptViewModel.receiptData
     val isLoading = receiptViewModel.isLoading
     val errorMessage = receiptViewModel.errorMessage
 
+    // Track if OCR corrections were made
+    var userMadeCorrections by remember { mutableStateOf(false) }
+
+    // Track original values for feedback
+    var originalData by remember { mutableStateOf<ReceiptData?>(null) }
+
     if (receiptData == null && !isLoading) {
         // No data yet, initiate processing
         receiptViewModel.processReceiptImage(context, imageUri)
+    }
+
+    // Save the original data for comparison
+    LaunchedEffect(receiptData) {
+        if (receiptData != null && originalData == null) {
+            originalData = receiptData
+        }
     }
 
     Column(
@@ -211,10 +238,27 @@ fun ReceiptSummaryContent(
             // Show receipt data for confirmation
             EditableReceiptData(
                 receiptData = receiptData,
-                onDataChanged = { updatedData ->
+                originalData = originalData,
+                onDataChanged = { updatedData, hasUserCorrections ->
                     receiptViewModel.updateReceiptData(updatedData)
+                    userMadeCorrections = hasUserCorrections
                 },
                 onSave = {
+                    // If user made corrections, submit them for training
+                    if (userMadeCorrections && originalData != null) {
+                        scope.launch {
+                            receiptViewModel.submitUserCorrections(
+                                originalData = originalData!!,
+                                correctedData = receiptData,
+                                imageUri = imageUri
+                            )
+
+                            // Show feedback message to user
+                            snackbarHostState.showSnackbar("Thank you for improving our OCR!")
+                        }
+                    }
+
+                    // Save receipt to Firebase
                     receiptViewModel.saveReceiptToFirebase(imageUri) { success, message ->
                         if (success) {
                             AppUtil.showToast(context, "Receipt saved successfully")
@@ -234,7 +278,8 @@ fun ReceiptSummaryContent(
 @Composable
 fun EditableReceiptData(
     receiptData: ReceiptData,
-    onDataChanged: (ReceiptData) -> Unit,
+    originalData: ReceiptData?,
+    onDataChanged: (ReceiptData, Boolean) -> Unit,
     onSave: () -> Unit
 ) {
     var merchantName by remember { mutableStateOf(receiptData.merchantName) }
@@ -243,6 +288,33 @@ fun EditableReceiptData(
     var category by remember { mutableStateOf(receiptData.category) }
     var lineItems by remember { mutableStateOf(receiptData.lineItems) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
+
+    // Feedback indicators
+    var showFeedbackSection by remember { mutableStateOf(false) }
+    var userMadeCorrections by remember { mutableStateOf(false) }
+    var userFeedback by remember { mutableStateOf("") }
+    var feedbackSubmitted by remember { mutableStateOf(false) }
+
+    // Check if user has made any corrections
+    fun checkForCorrections() {
+        // Only check if we have the original data to compare against
+        if (originalData != null) {
+            userMadeCorrections = merchantName != originalData.merchantName ||
+                    date != originalData.date ||
+                    totalAmount != originalData.totalAmount.toString() ||
+                    category != originalData.category ||
+                    !areLineItemsEqual(lineItems, originalData.lineItems)
+        }
+    }
+
+    // Helper function to compare line items
+    fun areLineItemsEqual(list1: List<LineItem>, list2: List<LineItem>): Boolean {
+        if (list1.size != list2.size) return false
+        return list1.zip(list2).all { (item1, item2) ->
+            item1.description == item2.description &&
+                    item1.amount == item2.amount
+        }
+    }
 
     // Tax relief categories in Malaysia
     val categories = listOf(
@@ -264,7 +336,12 @@ fun EditableReceiptData(
             category = category,
             rawText = receiptData.rawText
         )
-        onDataChanged(updatedData)
+
+        // Check for user corrections
+        checkForCorrections()
+
+        // Pass updated data and correction status
+        onDataChanged(updatedData, userMadeCorrections)
     }
 
     LazyColumn(
@@ -283,6 +360,9 @@ fun EditableReceiptData(
                     .padding(bottom = 16.dp),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 4.dp
+                ),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
                 Column(
@@ -365,6 +445,74 @@ fun EditableReceiptData(
                                         updateReceiptData()
                                     }
                                 )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Show correction feedback section if user made changes
+            if (userMadeCorrections && !feedbackSubmitted) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.ThumbUp,
+                                contentDescription = "Feedback",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+
+                            Text(
+                                text = "You've corrected some data! This helps us improve.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 8.dp)
+                            )
+
+                            TextButton(
+                                onClick = {
+                                    showFeedbackSection = !showFeedbackSection
+                                }
+                            ) {
+                                Text(if (showFeedbackSection) "Hide" else "Add Feedback")
+                            }
+                        }
+
+                        if (showFeedbackSection) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = userFeedback,
+                                onValueChange = { userFeedback = it },
+                                label = { Text("Additional feedback (optional)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 2
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            TextButton(
+                                onClick = {
+                                    // Here you would save the feedback
+                                    feedbackSubmitted = true
+                                    showFeedbackSection = false
+                                }
+                            ) {
+                                Text("Submit Feedback")
                             }
                         }
                     }
@@ -486,7 +634,10 @@ fun LineItemRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
@@ -542,9 +693,6 @@ fun LineItemRow(
                     )
                 }
             }
-
         }
     }
-
-
 }

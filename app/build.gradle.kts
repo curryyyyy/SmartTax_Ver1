@@ -38,6 +38,8 @@ android {
     buildFeatures {
         compose = true
     }
+
+    
 }
 
 dependencies {
@@ -74,6 +76,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
 
-
+    // Tesseract OCR
+    implementation ("com.rmtheis:tess-two:9.1.0")
 
 }
