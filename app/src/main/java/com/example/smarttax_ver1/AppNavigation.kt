@@ -12,7 +12,6 @@ import com.example.smarttax_ver1.screen.EditProfileScreen
 import com.example.smarttax_ver1.screen.HomeScreen
 import com.example.smarttax_ver1.screen.LoginScreen
 import com.example.smarttax_ver1.screen.ProfileScreen
-import com.example.smarttax_ver1.screen.ReceiptSummaryScreen
 import com.example.smarttax_ver1.screen.RegisterScreen
 import com.example.smarttax_ver1.screen.UploadReceiptScreen
 import com.google.firebase.Firebase
@@ -58,12 +57,6 @@ fun AppNavigation(modifier: Modifier = Modifier){
             UploadReceiptScreen(modifier, navController)
         }
 
-        // New route for receipt summary
-        composable("receiptSummary/{imageUri}") { backStackEntry ->
-            val imageUriString = backStackEntry.arguments?.getString("imageUri")
-            val imageUri = if (imageUriString != null) Uri.parse(imageUriString) else Uri.EMPTY
-            ReceiptSummaryScreen(modifier, navController, imageUri = imageUri)
-        }
     }
 }
 
