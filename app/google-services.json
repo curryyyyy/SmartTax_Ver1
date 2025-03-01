@@ -16,6 +16,31 @@
       "api_key": [
         {
           "current_key": "AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A"
+        },
+        {
+          "current_key": "AIzaSyABk2zQ1v4hxx16kV8-pOtXdM_33gjxDYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174963480472:android:4a6f143d47cf8dc8943ded",
+        "android_client_info": {
+          "package_name": "com.example.taxapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A"
+        },
+        {
+          "current_key": "AIzaSyABk2zQ1v4hxx16kV8-pOtXdM_33gjxDYA"
         }
       ],
       "services": {

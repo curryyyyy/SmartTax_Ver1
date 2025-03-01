@@ -248,9 +248,10 @@ fun ReceiptSummaryContent(
                     if (userMadeCorrections && originalData != null) {
                         scope.launch {
                             receiptViewModel.submitUserCorrections(
-                                originalData = originalData!!,
-                                correctedData = receiptData,
-                                imageUri = imageUri
+                                originalText = originalData!!.rawText,
+                                correctedText = receiptData.rawText,
+                                imageUri = imageUri,
+                                context = context
                             )
 
                             // Show feedback message to user
@@ -295,6 +296,15 @@ fun EditableReceiptData(
     var userFeedback by remember { mutableStateOf("") }
     var feedbackSubmitted by remember { mutableStateOf(false) }
 
+    // Helper function to compare line items
+    fun areLineItemsEqual(list1: List<LineItem>, list2: List<LineItem>): Boolean {
+        if (list1.size != list2.size) return false
+        return list1.zip(list2).all { (item1, item2) ->
+            item1.description == item2.description &&
+                    item1.amount == item2.amount
+        }
+    }
+
     // Check if user has made any corrections
     fun checkForCorrections() {
         // Only check if we have the original data to compare against
@@ -307,14 +317,7 @@ fun EditableReceiptData(
         }
     }
 
-    // Helper function to compare line items
-    fun areLineItemsEqual(list1: List<LineItem>, list2: List<LineItem>): Boolean {
-        if (list1.size != list2.size) return false
-        return list1.zip(list2).all { (item1, item2) ->
-            item1.description == item2.description &&
-                    item1.amount == item2.amount
-        }
-    }
+
 
     // Tax relief categories in Malaysia
     val categories = listOf(

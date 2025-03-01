@@ -5,6 +5,8 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * Manages a custom dictionary of corrections to improve OCR accuracy
@@ -38,7 +40,8 @@ class OCRDictionary {
         val merchantJson = prefs.getString("merchant_corrections", null)
         if (!merchantJson.isNullOrEmpty()) {
             try {
-                val map = com.google.gson.Gson().fromJson(merchantJson, Map::class.java) as? Map<String, String>
+                val type = object : TypeToken<Map<String, String>>() {}.type
+                val map = Gson().fromJson<Map<String, String>>(merchantJson, type)
                 if (map != null) {
                     merchantCorrections.putAll(map)
                 }

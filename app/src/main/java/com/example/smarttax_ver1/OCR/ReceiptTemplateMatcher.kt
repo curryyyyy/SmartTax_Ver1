@@ -183,7 +183,7 @@ class ReceiptTemplateMatcher {
         val items = mutableListOf<LineItem>()
 
         try {
-            val compiledPattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
+            val compiledPattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE or Pattern.MULTILINE)
             val matcher = compiledPattern.matcher(text)
 
             while (matcher.find()) {
