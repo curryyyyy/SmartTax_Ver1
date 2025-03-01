@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
 }
 
+
 android {
     namespace = "com.example.smarttax_ver1"
     compileSdk = 35
@@ -17,6 +18,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -76,9 +78,5 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
 
-    // Tesseract OCR
-    implementation ("com.rmtheis:tess-two:9.1.0")
-
-    implementation ("com.google.code.gson:gson:2.10.1") // Use the latest version
 
 }
