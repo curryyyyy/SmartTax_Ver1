@@ -1,5 +1,6 @@
 package com.example.smarttax_ver1.screen
 
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Face
@@ -69,7 +72,6 @@ fun EditProfileScreen(
                 title = {
                     Text(
                         text = "Profile",
-
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontFamily = FontFamily.SansSerif,
@@ -85,33 +87,31 @@ fun EditProfileScreen(
                 actions = {
                     //home
                     IconButton(onClick = { navController.navigate("home")}) {
-                        Icon(Icons.Filled.Home, contentDescription = "Localized description")
+                        Icon(Icons.Filled.Home, contentDescription = "Home")
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     //upload receipt
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                         Icon(
                             Icons.Filled.AddCircle,
-                            contentDescription = "Localized description",
+                            contentDescription = "Upload Receipt",
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     //profile
-                    IconButton(onClick = { navController.navigate("editProfile") }) {
+                    IconButton(onClick = { /* Already on profile screen */ }) {
                         Icon(
                             Icons.Filled.Face,
-                            contentDescription = "Localized description",
+                            contentDescription = "Profile",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-
-                    //add more
                 },
-
-                )
+            )
         }
     ) { innerPadding ->
         EditProfileScreenContent(
@@ -120,8 +120,6 @@ fun EditProfileScreen(
             editProfileViewModel = editProfileViewModel
         )
     }
-
-
 }
 
 @Composable
@@ -139,8 +137,11 @@ fun EditProfileScreenContent(
     val isLoading = editProfileViewModel.isLoading
     val errorMessage = editProfileViewModel.errorMessage
 
-    var context = LocalContext.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // Create a scroll state to enable scrolling
+    val scrollState = rememberScrollState()
 
     // Track if update was successful to show feedback
     var updateSuccess by remember { mutableStateOf(false) }
@@ -153,12 +154,12 @@ fun EditProfileScreenContent(
         }
     }
 
-
-
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(horizontal = 32.dp, vertical = 16.dp)
+            // Add vertical scroll modifier with the scroll state
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
@@ -191,7 +192,6 @@ fun EditProfileScreenContent(
         )
 
         Spacer(modifier = Modifier.height(20.dp))
-
 
         OutlinedTextField(
             value = name,
@@ -234,7 +234,7 @@ fun EditProfileScreenContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
-            value =income,
+            value = income,
             onValueChange = {
                 editProfileViewModel.income = it
             },
@@ -286,7 +286,7 @@ fun EditProfileScreenContent(
             Text(text = "Logout")
         }
 
+        // Add extra space at the bottom to ensure content isn't covered by bottom app bar
+        Spacer(modifier = Modifier.height(76.dp))
     }
-
 }
-

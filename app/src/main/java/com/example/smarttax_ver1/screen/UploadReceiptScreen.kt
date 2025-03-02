@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Face
@@ -42,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,17 +61,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.smarttax_ver1.AppUtil
 import com.example.smarttax_ver1.R
+import com.example.smarttax_ver1.viewmodel.ReceiptViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadReceiptScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    receiptViewModel: ReceiptViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -109,6 +116,7 @@ fun UploadReceiptScreen(
                         Icon(
                             Icons.Filled.AddCircle,
                             contentDescription = "Upload Receipt",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -127,7 +135,8 @@ fun UploadReceiptScreen(
     ) { innerPadding ->
         UploadReceiptContent(
             modifier = modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            receiptViewModel = receiptViewModel
         )
     }
 }
@@ -135,14 +144,15 @@ fun UploadReceiptScreen(
 @Composable
 fun UploadReceiptContent(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    receiptViewModel: ReceiptViewModel
 ) {
     val context = LocalContext.current
 
     // State for tracking the selected image URI
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // State for loading indicator
+    // State for showing loading indicator
     var isLoading by remember { mutableStateOf(false) }
 
     // Create a launcher for content selection (gallery)
@@ -151,11 +161,21 @@ fun UploadReceiptContent(
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            // After selecting from gallery, navigate to receipt summary or processing screen
-            // For now, just show a toast
-            AppUtil.showToast(context, "Receipt selected from gallery")
-            // TODO: Process the receipt image and navigate to summary screen
-            // navController.navigate("receiptSummary")
+            isLoading = true
+
+            // Process the receipt image using the ViewModel
+            receiptViewModel.processReceiptImage(
+                uri = uri,
+                context = context,
+                onSuccess = {
+                    isLoading = false
+                    navController.navigate("receiptSummary")
+                },
+                onError = { errorMessage ->
+                    isLoading = false
+                    AppUtil.showToast(context, errorMessage)
+                }
+            )
         }
     }
 
@@ -164,10 +184,21 @@ fun UploadReceiptContent(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && selectedImageUri != null) {
-            // Image captured successfully
-            AppUtil.showToast(context, "Receipt captured with camera")
-            // TODO: Process the receipt image and navigate to summary screen
-            // navController.navigate("receiptSummary")
+            isLoading = true
+
+            // Process the receipt image using the ViewModel
+            receiptViewModel.processReceiptImage(
+                uri = selectedImageUri!!,
+                context = context,
+                onSuccess = {
+                    isLoading = false
+                    navController.navigate("receiptSummary")
+                },
+                onError = { errorMessage ->
+                    isLoading = false
+                    AppUtil.showToast(context, errorMessage)
+                }
+            )
         }
     }
 
@@ -199,7 +230,10 @@ fun UploadReceiptContent(
         }
     }
 
-    // We've moved the camera launch logic directly into the permission callback
+    // Reset the ViewModel state when navigating to this screen
+    LaunchedEffect(Unit) {
+        receiptViewModel.resetState()
+    }
 
     Column(
         modifier = modifier
@@ -208,82 +242,30 @@ fun UploadReceiptContent(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "How would you like to add your receipt?",
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.padding(bottom = 40.dp)
-        )
-
-        // Display selected image if available
-        if (selectedImageUri != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(bottom = 24.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(selectedImageUri),
-                    contentDescription = "Selected Receipt",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
-                )
-            }
-
-            Button(
-                onClick = {
-                    isLoading = true
-                    // Navigate to the receipt summary screen with the image URI
-                    if (selectedImageUri != null) {
-                        val encodedUri = Uri.encode(selectedImageUri.toString())
-                        navController.navigate("receiptSummary/${encodedUri}")
-                    } else {
-                        AppUtil.showToast(context, "No image selected")
-                        isLoading = false
-                    }
-//                    // Simulate processing delay
-//                    android.os.Handler().postDelayed({
-//                        isLoading = false
-//                        navController.navigate("home") // Change to receipt summary when available
-//                    }, 2000)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = !isLoading && selectedImageUri != null
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Process Receipt", fontSize = 18.sp)
-                }
-            }
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 4.dp
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = { selectedImageUri = null },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Choose Another Receipt", fontSize = 18.sp)
-            }
+            Text(
+                text = "Processing receipt...",
+                style = MaterialTheme.typography.bodyLarge
+            )
         } else {
+            Text(
+                text = "How would you like to add your receipt?",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.padding(bottom = 40.dp)
+            )
+
             // Option Cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -291,7 +273,7 @@ fun UploadReceiptContent(
             ) {
                 // Take photo option
                 UploadOption(
-                    icon = Icons.Default.Face,
+                    icon = Icons.Default.AccountCircle,
                     title = "Take Photo",
                     description = "Capture receipt using camera",
                     onClick = {
@@ -331,7 +313,7 @@ fun UploadReceiptContent(
 
                 // Upload from gallery option
                 UploadOption(
-                    icon = Icons.Default.AddCircle,
+                    icon = Icons.Default.Face,
                     title = "From Gallery",
                     description = "Select receipt from gallery",
                     onClick = { galleryLauncher.launch("image/*") },
@@ -414,3 +396,4 @@ fun UploadOption(
         }
     }
 }
+
