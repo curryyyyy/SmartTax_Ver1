@@ -78,5 +78,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
 
+    // Add Gemini AI dependencies
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
+
 
 }
