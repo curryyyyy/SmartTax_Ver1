@@ -25,31 +25,31 @@ fun AppNavigation(modifier: Modifier = Modifier){
     val firstPage = if(isLoggedIn) "home" else "auth"
 
     NavHost(navController = navController, startDestination = firstPage) {
-        composable("auth"){
+        composable("auth") {
             AuthScreen(modifier, navController)
         }
 
-        composable("login"){
+        composable("login") {
             LoginScreen(modifier, navController)
         }
 
-        composable("register"){
+        composable("register") {
             RegisterScreen(modifier, navController)
         }
 
-        composable("home"){
+        composable("home") {
             HomeScreen(modifier, navController)
         }
 
-        composable("profile"){
+        composable("profile") {
             ProfileScreen(modifier, navController)
         }
 
-        composable("editProfile"){
+        composable("editProfile") {
             EditProfileScreen(modifier, navController)
         }
 
-        composable("category"){
+        composable("category") {
             CategoryScreen(modifier)
         }
 
