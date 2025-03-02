@@ -1,6 +1,8 @@
 package com.example.smarttax_ver1.viewmodel
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,11 +37,11 @@ class CategoryViewModel : ViewModel() {
     var editExpenseItems by mutableStateOf<List<ExpenseItem>>(emptyList())
 
     // Data state
-    var categoryData by mutableStateOf<Map<String, List<ReceiptModel>>>(emptyMap())
+    var categoryData by mutableStateOf<Map<String, List<ExpenseItemWithReceipt>>>(emptyMap())
     var categorySummary by mutableStateOf<Map<String, Double>>(emptyMap())
     var expandedCategories by mutableStateOf<Set<String>>(emptySet())
 
-    // Available categories (same as in other screens for consistency)
+    // Available categories
     val availableCategories = listOf(
         "Lifestyle Expenses",
         "Childcare",
@@ -49,10 +51,17 @@ class CategoryViewModel : ViewModel() {
         "Education"
     )
 
+    // Data class to link expense items with their parent receipt
+    data class ExpenseItemWithReceipt(
+        val item: ExpenseItem,
+        val receipt: ReceiptModel
+    )
+
     init {
         loadCategoryData()
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun loadCategoryData() {
         viewModelScope.launch {
             isLoading = true
@@ -74,21 +83,54 @@ class CategoryViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Group receipts by category
-                val groupedReceipts = receipts.groupBy { it.category }
+                // Create a map to store items by category
+                val itemsByCategory = mutableMapOf<String, MutableList<ExpenseItemWithReceipt>>()
+                val categorySums = mutableMapOf<String, Double>()
 
-                // Calculate summary (total amount per category)
-                val summary = groupedReceipts.mapValues { (_, receipts) ->
-                    receipts.sumOf { it.total }
+                // Process each receipt and its expense items
+                receipts.forEach { receipt ->
+                    // If receipt has specific expense items, process each item's category
+                    if (receipt.items.isNotEmpty()) {
+                        receipt.items.forEach { item ->
+                            // Use the item's category, or fall back to receipt category if empty
+                            val itemCategory = if (item.category.isNotEmpty()) item.category else receipt.category
+
+                            // Add item to its category list
+                            val itemsList = itemsByCategory.getOrDefault(itemCategory, mutableListOf())
+                            itemsList.add(ExpenseItemWithReceipt(item, receipt))
+                            itemsByCategory[itemCategory] = itemsList
+
+                            // Add to category sum
+                            val currentSum = categorySums.getOrDefault(itemCategory, 0.0)
+                            categorySums[itemCategory] = currentSum + item.amount
+                        }
+                    } else {
+                        // If no specific items, create a default item from receipt info
+                        val defaultItem = ExpenseItem(
+                            description = receipt.merchantName,
+                            amount = receipt.total,
+                            category = receipt.category
+                        )
+
+                        val itemsList = itemsByCategory.getOrDefault(receipt.category, mutableListOf())
+                        itemsList.add(ExpenseItemWithReceipt(defaultItem, receipt))
+                        itemsByCategory[receipt.category] = itemsList
+
+                        // Add to category sum
+                        val currentSum = categorySums.getOrDefault(receipt.category, 0.0)
+                        categorySums[receipt.category] = currentSum + receipt.total
+                    }
                 }
 
                 // Update state
-                categoryData = groupedReceipts
-                categorySummary = summary
+                categoryData = itemsByCategory.mapValues { entry ->
+                    entry.value.sortedByDescending { it.receipt.date }
+                }
+                categorySummary = categorySums
 
                 // If this is the first load, expand the first category by default
-                if (expandedCategories.isEmpty() && groupedReceipts.isNotEmpty()) {
-                    expandedCategories = setOf(groupedReceipts.keys.first())
+                if (expandedCategories.isEmpty() && itemsByCategory.isNotEmpty()) {
+                    expandedCategories = setOf(itemsByCategory.keys.first())
                 }
 
             } catch (e: Exception) {
@@ -161,6 +203,7 @@ class CategoryViewModel : ViewModel() {
     }
 
     // Save edited receipt
+    @RequiresApi(Build.VERSION_CODES.N)
     fun saveEditedReceipt(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val currentReceipt = currentEditReceipt ?: return
 

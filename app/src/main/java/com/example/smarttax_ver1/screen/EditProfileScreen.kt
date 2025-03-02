@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -86,8 +87,12 @@ fun EditProfileScreen(
             BottomAppBar(
                 actions = {
                     //home
-                    IconButton(onClick = { navController.navigate("home")}) {
-                        Icon(Icons.Filled.Home, contentDescription = "Home")
+                    IconButton(onClick = { navController.navigate("home") }) {
+                        Icon(
+                            Icons.Filled.Home,
+                            contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -102,15 +107,24 @@ fun EditProfileScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
+                    //category
+                    IconButton(onClick = { navController.navigate("category") }) {
+                        Icon(
+                            Icons.Filled.Star,
+                            contentDescription = "Profile",
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
                     //profile
-                    IconButton(onClick = { /* Already on profile screen */ }) {
+                    IconButton(onClick = { navController.navigate("editProfile") }) {
                         Icon(
                             Icons.Filled.Face,
                             contentDescription = "Profile",
-                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                },
+                }
             )
         }
     ) { innerPadding ->

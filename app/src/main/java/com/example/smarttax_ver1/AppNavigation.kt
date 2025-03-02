@@ -1,6 +1,8 @@
 package com.example.smarttax_ver1
 
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,6 +23,7 @@ import com.example.smarttax_ver1.viewmodel.ReceiptViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier){
     val navController = rememberNavController()
@@ -55,7 +58,7 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
 
         composable("category") {
-            CategoryScreen(modifier)
+            CategoryScreen(modifier, navController)
         }
 
         composable("uploadReceipt") {

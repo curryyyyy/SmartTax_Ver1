@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -93,43 +94,51 @@ fun UploadReceiptScreen(
                             fontWeight = FontWeight.Bold
                         )
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
                 }
             )
         },
         bottomBar = {
             BottomAppBar(
                 actions = {
-                    // Home
+                    //home
                     IconButton(onClick = { navController.navigate("home") }) {
-                        Icon(Icons.Filled.Home, contentDescription = "Home")
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Upload receipt
-                    IconButton(onClick = { /* Already on this screen */ }) {
                         Icon(
-                            Icons.Filled.AddCircle,
-                            contentDescription = "Upload Receipt",
+                            Icons.Filled.Home,
+                            contentDescription = "Home",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Profile
+                    //upload receipt
+                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+                        Icon(
+                            Icons.Filled.AddCircle,
+                            contentDescription = "Upload Receipt",
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    //category
+                    IconButton(onClick = { navController.navigate("category") }) {
+                        Icon(
+                            Icons.Filled.Star,
+                            contentDescription = "Profile",
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    //profile
                     IconButton(onClick = { navController.navigate("editProfile") }) {
                         Icon(
                             Icons.Filled.Face,
                             contentDescription = "Profile",
                         )
                     }
-                },
+                }
             )
         }
     ) { innerPadding ->
@@ -323,14 +332,6 @@ fun UploadReceiptContent(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Illustration
-            Image(
-                painter = painterResource(id = R.drawable.login), // Replace with a receipt image resource
-                contentDescription = "Upload Receipt Illustration",
-                modifier = Modifier
-                    .size(240.dp)
-                    .padding(16.dp)
-            )
         }
     }
 }

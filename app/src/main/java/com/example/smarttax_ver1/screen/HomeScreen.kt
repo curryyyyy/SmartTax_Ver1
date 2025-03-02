@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -88,6 +89,16 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
 
                     Spacer(modifier = Modifier.weight(1f))
 
+                    //category
+                    IconButton(onClick = { navController.navigate("category") }) {
+                        Icon(
+                            Icons.Filled.Star,
+                            contentDescription = "Profile",
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
                     //profile
                     IconButton(onClick = { navController.navigate("editProfile") }) {
                         Icon(
@@ -124,53 +135,53 @@ fun HomeScreenContent(modifier: Modifier = Modifier, navController: NavHostContr
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // Card for Tax Insights
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Build,
-                        contentDescription = "Tax Insights",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-
-                    Text(
-                        text = "AI Tax Insights",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Get AI-powered analysis of your tax savings opportunities based on your receipts",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { navController.navigate("taxInsights") },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("View Tax Insights")
-                }
-            }
-        }
+//        // Card for Tax Insights
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(bottom = 16.dp),
+//            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+//            colors = CardDefaults.cardColors(
+//                containerColor = MaterialTheme.colorScheme.primaryContainer
+//            )
+//        ) {
+//            Column(
+//                modifier = Modifier.padding(16.dp)
+//            ) {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Build,
+//                        contentDescription = "Tax Insights",
+//                        tint = MaterialTheme.colorScheme.primary,
+//                        modifier = Modifier.padding(end = 8.dp)
+//                    )
+//
+//                    Text(
+//                        text = "AI Tax Insights",
+//                        style = MaterialTheme.typography.titleLarge,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//
+//                Spacer(modifier = Modifier.height(8.dp))
+//
+//                Text(
+//                    text = "Get AI-powered analysis of your tax savings opportunities based on your receipts",
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+//
+//                Spacer(modifier = Modifier.height(16.dp))
+//
+//                Button(
+//                    onClick = { navController.navigate("taxInsights") },
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Text("View Tax Insights")
+//                }
+//            }
+//        }
 
         // Card for Categories
         Card(

@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -530,7 +531,7 @@ fun EditableExpenseItemCard(
                     // Edit button
                     IconButton(onClick = { isEditing = !isEditing }) {
                         Icon(
-                            imageVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
+                            imageVector = if (isEditing) Icons.Default.Edit else Icons.Default.Edit,
                             contentDescription = if (isEditing) "Cancel Editing" else "Edit Item",
                             tint = MaterialTheme.colorScheme.primary
                         )

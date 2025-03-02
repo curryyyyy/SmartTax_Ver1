@@ -23,3 +23,8 @@ data class ExpenseItem(
     val amount: Double = 0.0,
     val category: String = ""
 )
+
+data class ExpenseItemWithReceipt(
+    val item: ExpenseItem,
+    val receipt: ReceiptModel
+)
